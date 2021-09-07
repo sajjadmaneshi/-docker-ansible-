@@ -1,0 +1,52 @@
+---
+  - name: update apt cache and update system
+    apt:
+      update_cache: yes
+      upgrade: full
+    tags:
+      - all
+      - install
+      
+  - name: install prerequired packages
+    yum:
+      name: "{{item}}"
+      state: present
+    loop:
+      - "{{packages_to_install}}" 
+    tags:
+      - all
+      - install
+
+  - name: Configuring docker-ce repo
+    get_url:
+      url: https://download.docker.com/linux/centos/docker-ce.repo
+      dest: /etc/yum.repos.d/docker-ce.repo
+      mode: 0644
+    tags:
+      - all
+      - install
+      - add
+             
+  - name: install docker latest version
+    yum:
+      name: docker-ce
+      update_cache: yes
+      state: present
+    tags: 
+      - all
+      - install
+
+  - name: check installed version of docker
+    shell: "docker version"
+    ignore_errors: yes
+    register: result
+    tags:
+      - all
+      - install
+      - init
+      - info
+      
+  - name: check docker installation
+    meta: end_host
+    when: result.rc == 0
+
